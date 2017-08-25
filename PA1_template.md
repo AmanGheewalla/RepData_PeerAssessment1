@@ -1,19 +1,36 @@
----
-title: "Reproducible Research Programming Assignment 1"
-output: 
-  html_document: 
-    keep_md: yes
----
+# Reproducible Research Programming Assignment 1
 
 Setting up global options to show all code
 
-```{r setup, include=TRUE}
+
+```r
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 Importing Packages
-```{r packages}
+
+```r
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(ggplot2)
 library(timeDate)
 ```
@@ -21,7 +38,8 @@ library(timeDate)
 
 ## Downloading, Importing, and Processing Data
 
-```{r load}
+
+```r
 # Download the dataset
 fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 download.file(fileUrl,destfile="C:/Users/amang/Documents/Coursera/Reproducible Research/Programming Assignment 1/Activity Monitoring Data.zip")
@@ -34,14 +52,14 @@ activity <- read.csv("C:/Users/amang/Documents/Coursera/Reproducible Research/Pr
 
 # Convert date field into date format
 activity$date <- as.Date(activity$date)
-
 ```
 
 ## What is mean total number of steps taken per day?
 
 Create histogram of steps per day
 
-```{r total_steps}
+
+```r
 # Remove NA values from dataset
 activityactual <- activity[complete.cases(activity), ]
 
@@ -51,21 +69,38 @@ steps <- summarise(grp, steps = sum(steps))
 qplot(steps, data = steps, fill = I("red"), col = I("white"))
 ```
 
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/total_steps-1.png)<!-- -->
+
 
 Calculate mean of steps
-```{r mean}
+
+```r
 mean(steps$steps)
 ```
 
+```
+## [1] 10766.19
+```
+
 Calculate median of steps
-```{r median}
+
+```r
 median(steps$steps)
+```
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
 
 Create time series plot
-```{r interval}
+
+```r
 # Group by interval to get the average steps for each interval
 grp_interval <- group_by(activityactual, interval)
 interval <- summarize(grp_interval, steps = mean(steps))
@@ -78,21 +113,37 @@ interval$time <- strptime(interval$time, format = "%H%M")
 qplot(interval$time, interval$steps, geom=c("line"), col = I("red"), xlab = "Time", ylab = "Steps")
 ```
 
+![](PA1_template_files/figure-html/interval-1.png)<!-- -->
+
 Interval with maximum number of steps
-```{r}
+
+```r
 #Interval with maximumn number of steps
 interval[which(interval$steps == max(interval$steps)), ]
+```
+
+```
+## # A tibble: 1 × 3
+##   interval    steps      time
+##      <int>    <dbl>    <dttm>
+## 1      835 206.1698 <POSIXlt>
 ```
 
 ## Input missing values
 
 Find the total number of missing values
-```{r}
+
+```r
 sum(is.na(activity))
 ```
 
+```
+## [1] 2304
+```
+
 Create a new dataset that replaces the missing values with an average of the interval that it belongs to
-```{r}
+
+```r
 #Calculate average steps per interval
 interval_mean <- summarise(grp_interval, steps = mean(steps))$steps
 
@@ -101,21 +152,38 @@ activity_complete <- within(activity, steps <- ifelse(is.na(steps), interval_mea
 ```
 
 Create data frame by populating NA values with the average of interval data
-```{r}
+
+```r
 # Group by date to get a sum of steps and create histogram
 grp_complete <- group_by(activity_complete, date)
 steps_complete <- summarise(grp_complete, steps = sum(steps))
 qplot(steps, data = steps_complete, fill = I("blue"), col = I("white"))
 ```
 
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 Calculate mean of steps with missing data filled in
-```{r mean_complete}
+
+```r
 mean(steps_complete$steps)
 ```
 
+```
+## [1] 10766.19
+```
+
 Calculate median of steps with missing data filled in
-```{r median_complete}
+
+```r
 median(steps_complete$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 * We see that the shape of the histogram of the two datasets (one with missing values and one without) remains generally the same.
@@ -127,7 +195,8 @@ median(steps_complete$steps)
 ##Are there differences in activity patterns between weekdays and weekends?
 
 We will add a new field to the dataset with missing values filled, and that field will tell us whether the date field is a weekday or a weekend
-```{r}
+
+```r
 # Create daytpe field to tell us whether date is weekday or weekend
 activity_complete <- mutate(activity_complete, daytype = ifelse(isWeekday(activity_complete$date), "weekday", "weekend"))
 weekday <- filter(activity_complete, daytype == "weekday")
@@ -135,7 +204,8 @@ weekend <- filter(activity_complete, daytype == "weekend")
 ```
 
 Create time series plot
-```{r interval_complete}
+
+```r
 # Group by interval to get the average steps for each interval
 grp_weekday <- group_by(weekday, interval, daytype)
 grp_weekend <- group_by(weekend, interval, daytype)
@@ -150,6 +220,13 @@ interval_weekend$time <- strptime(interval_weekend$time, format = "%H%M")
 
 # Weekday Plot
 qplot(interval_weekday$time, interval_weekday$steps, geom=c("line"), col = I("blue"), xlab = "Time", ylab = "Steps", main = "Weekday")
+```
+
+![](PA1_template_files/figure-html/interval_complete-1.png)<!-- -->
+
+```r
 # Weekend Plot
 qplot(interval_weekend$time, interval_weekend$steps, geom=c("line"), col = I("blue"), xlab = "Time", ylab = "Steps", main = "Weekend")
 ```
+
+![](PA1_template_files/figure-html/interval_complete-2.png)<!-- -->
